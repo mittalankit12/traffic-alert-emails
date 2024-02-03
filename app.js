@@ -5,6 +5,10 @@ require("dotenv").config();
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const TRAFFICVERKET_AUTH_KEY = process.env.TRAFFICVERKET_AUTH_KEY;
 const TRAFFICVERKET_API_URL = process.env.TRAFFICVERKET_API_URL;
+const EMAIL_TEMPLATE_ID = process.env.EMAIL_TEMPLATE_ID;
+const TO_EMAIL = process.env.TO_EMAIL;
+const FROM_EMAIL = process.env.FROM_EMAIL;
+const TRAFFIC_HEATMAP_URL = process.env.TRAFFIC_HEATMAP_URL;
 
 // Function to fetch traffic data
 async function fetchTrafficData(apiUrl, xmlData, headers) {
@@ -12,7 +16,7 @@ async function fetchTrafficData(apiUrl, xmlData, headers) {
     const response = await axios.post(apiUrl, xmlData, { headers });
     return response.data.RESPONSE.RESULT[0].TravelTimeRoute;
   } catch (error) {
-    console.error("Error in fetchSseUrl:", error.message);
+    console.error("Error in fetchTrafficData:", error.message);
     throw error;
   }
 }
@@ -42,7 +46,7 @@ async function main() {
       <INCLUDE>TrafficStatus</INCLUDE>
       <FILTER>
           <LT name="AverageFunctionalRoadClass" value="5" />
-          <EQ name="TrafficStatus" value="freeflow" />
+          <EQ name="TrafficStatus" value="heavy" />
       </FILTER>
   </QUERY>
   </REQUEST>
@@ -59,21 +63,18 @@ async function main() {
   try {
     const trafficData = await fetchTrafficData(apiUrl, xmlData, headers);
 
-    console.log(trafficData);
-
     // Uncomment the following section if you want to send a SendGrid email
     const sendGridApiKey = SENDGRID_API_KEY;
     const emailMsg = {
-      to: "ankit.mittal@umain.com",
-      from: "ankit.mittal@umain.com",
-      templateId: "d-1f3aa6606e71478788a4e229b4bca8bb",
+      to: TO_EMAIL,
+      from: FROM_EMAIL,
+      templateId: EMAIL_TEMPLATE_ID,
       dynamic_template_data: {
         subject: "Traffic situation",
         preheader: "Beware",
         name: "Sheldon",
         message: "Hello, this is a test email!",
-        imageUrl:
-          "https://743b-2a00-801-703-7f0c-f13c-8c1f-399-19dc.ngrok-free.app/latest-heatmap",
+        imageUrl: TRAFFIC_HEATMAP_URL,
         trafficData: trafficData,
       },
     };
